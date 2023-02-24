@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css?family=Lora');
+@import url('https://fonts.googleapis.com/css?family=Mulish');
+@import url('https://fonts.googleapis.com/css?family=Inter');
+
+a {
+  &:hover {
+    color: inherit;
+  }
+}
+
+html {
+  font-size: 16px;
+}
