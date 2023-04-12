@@ -34,11 +34,12 @@ export const Default = ({ params, fields }: PageCardProps): JSX.Element => {
   const { sitecoreContext } = useSitecoreContext();
   const id = params.RenderingIdentifier;
   const [buttonText, setButtonText] = useState<string>('');
+  const language = sitecoreContext.language || config.defaultLanguage;
 
   useEffect(() => {
     dictionaryServiceFactory
       .create()
-      .fetchDictionaryData(sitecoreContext.language || config.defaultLanguage)
+      .fetchDictionaryData(language)
       .then((data) => setButtonText(data['LEARN_MORE']));
   }, []);
 

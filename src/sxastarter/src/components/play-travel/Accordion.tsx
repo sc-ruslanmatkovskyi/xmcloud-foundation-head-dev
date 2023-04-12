@@ -77,7 +77,7 @@ const AccordionItemRendering = (props: AccordionItemProps) => {
   );
 };
 
-export const Default = (props: AccordionProps) => {
+export const Default = (props: AccordionProps): JSX.Element => {
   const id = props.params.RenderingIdentifier;
   const accordionData = props.fields?.data?.accordion?.children?.results;
   const accordion = accordionData.length ? (
