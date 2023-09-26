@@ -1,4 +1,3 @@
-import * as FEAAS from '@sitecore-feaas/clientside/react';
 import React from 'react';
 import { ComponentParams, ComponentRendering } from '@sitecore-jss/sitecore-jss-nextjs';
 
@@ -7,7 +6,7 @@ interface TestComponentProps {
   params: ComponentParams;
 }
 
-export const TestComponent = (props: TestComponentProps): JSX.Element => {
+export const Default = (props: TestComponentProps): JSX.Element => {
   const id = props.params.RenderingIdentifier;
 
   return (
@@ -18,15 +17,3 @@ export const TestComponent = (props: TestComponentProps): JSX.Element => {
     </div>
   );
 };
-
-FEAAS.External.registerComponent(TestComponent, {
-  name: 'TestComponent',
-  properties: {
-    title: {
-      type: 'string',
-    },
-    columnsCount: {
-      type: 'number',
-    },
-  },
-});
