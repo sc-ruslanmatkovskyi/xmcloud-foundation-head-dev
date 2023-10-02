@@ -1,19 +1,39 @@
 import React from 'react';
-import { ComponentParams, ComponentRendering } from '@sitecore-jss/sitecore-jss-nextjs';
+import * as FEAAS from '@sitecore-feaas/clientside/react';
 
 interface TestComponentProps {
-  rendering: ComponentRendering & { params: ComponentParams };
-  params: ComponentParams;
+  title: string;
+  columnsCount: number;
 }
 
-export const Default = (props: TestComponentProps): JSX.Element => {
-  const id = props.params.RenderingIdentifier;
-
+export const TestComponent = (props: TestComponentProps): JSX.Element => {
+  const columns: string[] = [];
+  for (let i = 0; i < props.columnsCount; i++) {
+    columns.push(`Component Column ${i + 1}`);
+  }
   return (
-    <div className={`component ${props.params.styles}`} id={id ? id : undefined}>
-      <div className="component-content">
-        <p>TestComponent Component</p>
+    <div className="container">
+      <h2>{props.title || 'BYOC Demo'}</h2>
+      <p>TestComponent Component</p>
+      <div className="row">
+        {columns.map((text, index) => (
+          <div key={index} className={`col-sm-${props.columnsCount}`}>
+            {text}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
+
+FEAAS.External.registerComponent(TestComponent, {
+  name: 'TestComponent',
+  properties: {
+    title: {
+      type: 'string',
+    },
+    columnsCount: {
+      type: 'number',
+    },
+  },
+});
