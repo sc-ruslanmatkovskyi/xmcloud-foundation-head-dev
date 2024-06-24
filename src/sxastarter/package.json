@@ -4,7 +4,7 @@
   "version": "22.0.0",
   "private": true,
   "config": {
-    "appName": "sxastarter",
+    "appName": "redirectssite",
     "rootPlaceholders": [
       "jss-main"
     ],
