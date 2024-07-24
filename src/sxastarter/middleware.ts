@@ -6,7 +6,7 @@ export default async function (req: NextRequest) {
 
   console.log(url, 'URL');
 
-  if (url.pathname === '/post') {
+  if (url.pathname.includes('post')) {
     url.pathname = '/about';
     url.href = url.href.replace('/post', '/about');
     NextResponse.redirect(url, {
