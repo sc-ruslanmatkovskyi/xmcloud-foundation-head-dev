@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export default async function (req: NextRequest) {
   const url = req.nextUrl.clone();
 
+  console.log('REDIRECT MIDDLEWARE');
+
   if (url.pathname.includes('post')) {
     url.pathname = '/about';
     url.href = url.href.replace('/post', '/about');
