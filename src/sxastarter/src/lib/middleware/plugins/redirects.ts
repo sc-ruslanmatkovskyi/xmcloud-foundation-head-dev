@@ -32,7 +32,7 @@ class RedirectsPlugin implements MiddlewarePlugin {
    * @param req<NextRequest>
    * @returns Promise<NextResponse>
    */
-  async exec(req: NextRequest, res?:NextResponse): Promise<NextResponse> {
+  async exec(req: NextRequest, res?: NextResponse): Promise<NextResponse> {
     return this.redirectsMiddleware.getHandler()(req, res);
   }
 }

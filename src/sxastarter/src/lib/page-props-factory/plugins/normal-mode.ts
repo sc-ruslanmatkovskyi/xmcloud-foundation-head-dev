@@ -45,7 +45,7 @@ class NormalModePlugin implements Plugin {
     }
 
     // Fetch dictionary data if layout data was present
-    if (!props.notFound) {      
+    if (!props.notFound) {
       const dictionaryService = this.getDictionaryService(props.site.name);
       props.dictionary = await dictionaryService.fetchDictionaryData(props.locale);
     }
