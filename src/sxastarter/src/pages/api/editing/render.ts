@@ -12,7 +12,7 @@ import { EditingRenderMiddleware } from '@sitecore-jss/sitecore-jss-nextjs/editi
  *  3. Redirect the request to the route, passing along the Preview Mode cookies.
  *     This allows retrieval of the editing data in preview context (via an `EditingDataService`) - see `SitecorePagePropsFactory`
  *  4. The redirected request will render the page with editing markup in place
- * 
+ *
  * For Chromes(legacy) mode, the `EditingRenderMiddleware` will
  *  1. Extract editing data from the Sitecore editor POST request
  *  2. Stash this data (for later use in the page render request) via an `EditingDataService`, which returns a key for retrieval
@@ -20,11 +20,11 @@ import { EditingRenderMiddleware } from '@sitecore-jss/sitecore-jss-nextjs/editi
  *  4. Invoke the actual page render request, passing along the Preview Mode cookies.
  *     This allows retrieval of the editing data in preview context (via an `EditingDataService`) - see `SitecorePagePropsFactory`
  *  5. Return the rendered page HTML to the Sitecore editor
- * 
+ *
  */
 
 /**
- * [Chromes mode only] For Vercel deployments: 
+ * [Chromes mode only] For Vercel deployments:
  * if you experience crashes in editing, you may need to use VercelEditingDataCache or a custom Redis data cache implementation with EditingRenderMiddleware
  * Please refer to documentation for a detailed guide.
  */
