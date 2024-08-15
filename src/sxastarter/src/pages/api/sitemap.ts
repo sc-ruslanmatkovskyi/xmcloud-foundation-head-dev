@@ -1,9 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import {
-  AxiosDataFetcher,
-  GraphQLSitemapXmlService,
-  AxiosResponse,
-} from '@sitecore-jss/sitecore-jss-nextjs';
+import { AxiosDataFetcher, GraphQLSitemapXmlService, AxiosResponse } from '@sitecore-jss/sitecore-jss-nextjs';
 import { siteResolver } from 'lib/site-resolver';
 import config from 'temp/config';
 import clientFactory from 'lib/graphql-client-factory';
@@ -54,7 +50,7 @@ const sitemapApi = async (
   if (!sitemaps.length) {
     return res.redirect('/404');
   }
-
+  
   const reqtHost = req.headers.host;
   const reqProtocol = req.headers['x-forwarded-proto'] || 'https';
   const SitemapLinks = sitemaps

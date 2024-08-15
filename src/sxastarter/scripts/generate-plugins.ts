@@ -59,6 +59,6 @@ const pluginDefinitions: PluginDefinition[] = [
   },
 ];
 
-pluginDefinitions.forEach((definition) => {
+pluginDefinitions.forEach(definition => {
   generatePlugins(definition);
 });
