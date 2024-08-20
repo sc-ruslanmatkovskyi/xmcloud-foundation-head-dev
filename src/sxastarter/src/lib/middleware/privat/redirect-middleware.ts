@@ -69,11 +69,6 @@ export class RedirectsMiddleware extends MiddlewareBase {
     let site: SiteInfo | undefined;
     const startTimestamp = Date.now();
 
-    console.log('asfdf!!!!!!!!!!!!!!!!!!!!!!!!!!!!', req.nextUrl.pathname);
-    if (req.nextUrl.pathname === '/test1') {
-      return NextResponse.redirect('https://rusmtest.netlify.app/about');
-    }
-
     debug.common('redirects middleware start: %o', {
       pathname,
       language,
@@ -94,9 +89,11 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
       site = this.getSite(req, res);
 
+      console.log('SITE!!!!!!!!', site);
       // Find the redirect from result of RedirectService
       const existsRedirect = await this.getExistsRedirect(req, site.name);
 
+      console.log('EXISTS REDIRECT', existsRedirect);
       if (!existsRedirect) {
         debug.common('skipped (redirect does not exist)');
 
@@ -200,12 +197,12 @@ export class RedirectsMiddleware extends MiddlewareBase {
     siteName: string
   ): Promise<RedirectInfo | undefined> {
     const redirects = await this.redirectsService.fetchRedirects(siteName);
-    debug.common(' ==============FETCHED REDIRECTS', redirects);
     const normalizedUrl = this.normalizeUrl(req.nextUrl.clone());
     const tragetURL = normalizedUrl.pathname;
     const targetQS = normalizedUrl.search || '';
     const language = this.getLanguage(req);
     const modifyRedirects = structuredClone(redirects);
+    console.log(' ==============FETCHED REDIRECTS', modifyRedirects);
 
     return modifyRedirects.length
       ? modifyRedirects.find((redirect: RedirectInfo) => {
@@ -217,6 +214,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
             .replace(/(?<!\\)\?/g, '\\?')
             .replace(/\$\/gi$/g, '')}[\/]?$/gi`;
 
+          console.log('!!!!!!!!!!CHECKS!!!!!!!!', redirect.pattern, tragetURL, ' === ', targetQS);
           return (
             (regexParser(redirect.pattern).test(tragetURL) ||
               regexParser(redirect.pattern).test(`${tragetURL.replace(/\/*$/gi, '')}${targetQS}`) ||
