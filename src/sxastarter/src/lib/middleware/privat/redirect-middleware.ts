@@ -69,7 +69,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
     let site: SiteInfo | undefined;
     const startTimestamp = Date.now();
 
-    debug.redirects('redirects middleware start: %o', {
+    debug.common('redirects middleware start: %o', {
       pathname,
       language,
       hostname,
@@ -77,12 +77,12 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
     const createResponse = async () => {
       if (this.config.disabled && this.config.disabled(req, res || NextResponse.next())) {
-        debug.redirects('skipped (redirects middleware is disabled)');
+        debug.common('skipped (redirects middleware is disabled)');
         return res || NextResponse.next();
       }
 
       if (this.isPreview(req) || this.excludeRoute(pathname)) {
-        debug.redirects('skipped (%s)', this.isPreview(req) ? 'preview' : 'route excluded');
+        debug.common('skipped (%s)', this.isPreview(req) ? 'preview' : 'route excluded');
 
         return res || NextResponse.next();
       }
@@ -93,7 +93,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
       const existsRedirect = await this.getExistsRedirect(req, site.name);
 
       if (!existsRedirect) {
-        debug.redirects('skipped (redirect does not exist)');
+        debug.common('skipped (redirect does not exist)');
 
         return res || NextResponse.next();
       }
@@ -145,7 +145,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
       const redirectUrl = decodeURIComponent(url.href);
 
-      debug.redirects('REDIRECT-URL: ', redirectUrl);
+      debug.common('REDIRECT-URL: ', redirectUrl);
 
       /** return Response redirect with http code of redirect type **/
       switch (existsRedirect.redirectType) {
@@ -173,7 +173,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
     const response = await createResponse();
 
-    debug.redirects('redirects middleware end in %dms: %o', Date.now() - startTimestamp, {
+    debug.common('redirects middleware end in %dms: %o', Date.now() - startTimestamp, {
       redirected: response.redirected,
       status: response.status,
       url: response.url,
@@ -195,6 +195,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
     siteName: string
   ): Promise<RedirectInfo | undefined> {
     const redirects = await this.redirectsService.fetchRedirects(siteName);
+    debug.common(' ==============FETCHED REDIRECTS', redirects);
     const normalizedUrl = this.normalizeUrl(req.nextUrl.clone());
     const tragetURL = normalizedUrl.pathname;
     const targetQS = normalizedUrl.search || '';
