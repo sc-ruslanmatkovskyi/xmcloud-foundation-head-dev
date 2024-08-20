@@ -69,6 +69,11 @@ export class RedirectsMiddleware extends MiddlewareBase {
     let site: SiteInfo | undefined;
     const startTimestamp = Date.now();
 
+    console.log('asfdf!!!!!!!!!!!!!!!!!!!!!!!!!!!!', req.nextUrl.pathname);
+    if (req.nextUrl.pathname === '/test1') {
+      return NextResponse.redirect('https://rusmtest.netlify.app/about');
+    }
+
     debug.common('redirects middleware start: %o', {
       pathname,
       language,
