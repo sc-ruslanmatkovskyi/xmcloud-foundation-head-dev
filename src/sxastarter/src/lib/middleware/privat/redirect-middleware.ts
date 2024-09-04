@@ -168,6 +168,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
             ...res,
             status: 301,
             statusText: 'Moved Permanently',
+            headers: {},
           });
         case REDIRECT_TYPE_302:
           return NextResponse.redirect(redirectUrl, {
