@@ -14,7 +14,7 @@ class RedirectsPlugin implements MiddlewarePlugin {
       clientFactory,
       // These are all the locales you support in your application.
       // These should match those in your next.config.js (i18n.locales).
-      locales: ['en'],
+      locales: ['en', 'uk-ua'],
       // This function determines if a route should be excluded from RedirectsMiddleware.
       // Certain paths are ignored by default (e.g. Next.js API routes), but you may wish to exclude more.
       // This is an important performance consideration since Next.js Edge middleware runs on every request.
