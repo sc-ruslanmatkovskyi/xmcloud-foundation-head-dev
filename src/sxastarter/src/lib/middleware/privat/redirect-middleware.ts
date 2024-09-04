@@ -164,7 +164,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
       /** return Response redirect with http code of redirect type **/
       switch (existsRedirect.redirectType) {
         case REDIRECT_TYPE_301:
-          return NextResponse.redirect(redirectUrl, {
+          return NextResponse.redirect('/pageimage', {
             ...res,
             status: 301,
             statusText: 'Moved Permanently',
