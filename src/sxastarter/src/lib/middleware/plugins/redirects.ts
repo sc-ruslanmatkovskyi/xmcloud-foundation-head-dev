@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { siteResolver } from 'lib/site-resolver';
 import clientFactory from 'lib/graphql-client-factory';
-import { RedirectsMiddleware } from '@sitecore-jss/sitecore-jss-nextjs/middleware';
+import { RedirectsMiddleware } from '../privat/redirect-middleware';
 import { MiddlewarePlugin } from '..';
 
 class RedirectsPlugin implements MiddlewarePlugin {
