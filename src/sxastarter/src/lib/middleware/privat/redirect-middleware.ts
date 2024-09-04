@@ -98,6 +98,8 @@ export class RedirectsMiddleware extends MiddlewareBase {
         return res || NextResponse.next();
       }
 
+      console.log('existsRedirect:', existsRedirect);
+
       // Find context site language and replace token
       if (
         REGEXP_CONTEXT_SITE_LANG.test(existsRedirect.target) &&
@@ -113,6 +115,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
       }
 
       const url = this.normalizeUrl(req.nextUrl.clone());
+      let prepareNewURL: URL = new URL(url.href);
 
       if (REGEXP_ABSOLUTE_URL.test(existsRedirect.target)) {
         url.href = existsRedirect.target;
@@ -122,7 +125,8 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
         if (this.locales.includes(urlFirstPart)) {
           req.nextUrl.locale = urlFirstPart;
-          existsRedirect.target = existsRedirect.target.replace(`/${urlFirstPart}`, '');
+          console.log('Locale:', req.nextUrl.locale, urlFirstPart, existsRedirect.target);
+          // existsRedirect.target = existsRedirect.target.replace(`/${urlFirstPart}`, '');
         }
 
         const target = source
@@ -139,11 +143,15 @@ export class RedirectsMiddleware extends MiddlewareBase {
           url.search = '';
         }
 
-        const prepareNewURL = new URL(`${target[0]}${url.search}`, url.origin);
+        console.log('Target:', target[0], url.search);
+        prepareNewURL = new URL(`${target[0]}${url.search}`, url.origin);
+        console.log('PrepareNewURL:', prepareNewURL.href);
         url.href = prepareNewURL.href;
       }
+      console.log('URL:', prepareNewURL?.href);
+      const redirectUrl = decodeURIComponent(prepareNewURL?.href);
 
-      const redirectUrl = decodeURIComponent(url.href);
+      console.log('Redirect URL:', redirectUrl);
 
       /** return Response redirect with http code of redirect type **/
       switch (existsRedirect.redirectType) {
@@ -275,7 +283,6 @@ export class RedirectsMiddleware extends MiddlewareBase {
     statusText: string
   ): NextResponse {
     const redirect = NextResponse.redirect(url, {
-      ...(res || {}),
       status,
       statusText,
       headers: res?.headers,
