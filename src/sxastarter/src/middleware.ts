@@ -6,8 +6,9 @@ export default async function (req: NextRequest, ev: NextFetchEvent) {
   if (req.nextUrl.pathname === '/not-exists' || req.nextUrl.pathname === '/uk-ua/not-exists') {
     req.nextUrl.locale = 'en';
     console.log(req.nextUrl);
+    req.nextUrl.pathname = '/about';
 
-    return NextResponse.redirect('https://rusmtest.netlify.app/en/about', 301);
+    return NextResponse.redirect(req.nextUrl, 301);
   }
 
   return middleware(req, ev);
