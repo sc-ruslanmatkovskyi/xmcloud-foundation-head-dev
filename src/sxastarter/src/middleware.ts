@@ -1,8 +1,23 @@
 import middleware from 'lib/middleware';
-import { type NextFetchEvent, type NextRequest } from 'next/server';
+import { type NextFetchEvent, NextRequest, NextResponse } from 'next/server';
 
 // eslint-disable-next-line
 export default async function (req: NextRequest, ev: NextFetchEvent) {
+  if (req.nextUrl.pathname === '/not-exists' || req.nextUrl.pathname === '/uk-ua/not-exists') {
+    const res = NextResponse.next();
+    const url = req.nextUrl.clone();
+    url.locale = 'en';
+    url.pathname = '/en/about';
+    url.href = url.origin + url.pathname;
+
+    const redirect = NextResponse.redirect(url, { status: 301, headers: res?.headers ?? {} });
+    redirect.headers.set('Accept-Language', 'en');
+    redirect.headers.delete('x-middleware-rewrite');
+    redirect.headers.delete('x-middleware-next');
+
+    return redirect;
+  }
+
   return middleware(req, ev);
 }
 
