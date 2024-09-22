@@ -3,6 +3,7 @@ import { type NextFetchEvent, NextRequest, NextResponse } from 'next/server';
 
 // eslint-disable-next-line
 export default async function (req: NextRequest, ev: NextFetchEvent) {
+  console.log('Middleware called', ev, req.nextUrl.clone());
   if (req.nextUrl.pathname === '/not-exists' || req.nextUrl.pathname === '/uk-ua/not-exists') {
     const res = NextResponse.next();
     const url = req.nextUrl.clone();
@@ -14,6 +15,13 @@ export default async function (req: NextRequest, ev: NextFetchEvent) {
     redirect.headers.set('Accept-Language', 'en');
     redirect.headers.delete('x-middleware-rewrite');
     redirect.headers.delete('x-middleware-next');
+
+    return redirect;
+  }
+
+  if (req.nextUrl.href === '/one?w=1&q=2') {
+    const redirect = NextResponse.redirect('/pageimage', { status: 301 });
+    console.log('Redirecting to /pageimage');
 
     return redirect;
   }
