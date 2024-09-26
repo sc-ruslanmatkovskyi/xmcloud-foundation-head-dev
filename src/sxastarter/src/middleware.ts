@@ -3,27 +3,11 @@ import { type NextFetchEvent, NextRequest, NextResponse } from 'next/server';
 
 // eslint-disable-next-line
 export default async function (req: NextRequest, ev: NextFetchEvent) {
-  console.log('Middleware called', ev, req.nextUrl.clone());
-  if (req.nextUrl.pathname === '/not-exists' || req.nextUrl.pathname === '/uk-ua/not-exists') {
-    const res = NextResponse.next();
-    const url = req.nextUrl.clone();
-    url.locale = 'en';
-    url.pathname = '/en/about';
-    url.href = url.origin + url.pathname;
-
-    const redirect = NextResponse.redirect(url, { status: 301, headers: res?.headers ?? {} });
-    redirect.headers.set('Accept-Language', 'en');
-    redirect.headers.delete('x-middleware-rewrite');
-    redirect.headers.delete('x-middleware-next');
-
-    return redirect;
-  }
-
-  if (req.nextUrl.href === '/one?w=1&q=2') {
-    const redirect = NextResponse.redirect('/pageimage', { status: 301 });
-    console.log('Redirecting to /pageimage');
-
-    return redirect;
+  console.log(req.nextUrl.locale);
+  if (req.nextUrl.locale === 'uk-ua' && req.nextUrl.pathname.startsWith('/opera')) {
+    req.nextUrl.locale = 'en';
+    req.nextUrl.pathname = '/about';
+    return NextResponse.redirect(req.nextUrl, 301);
   }
 
   return middleware(req, ev);
