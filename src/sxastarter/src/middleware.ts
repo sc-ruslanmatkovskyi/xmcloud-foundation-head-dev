@@ -3,7 +3,6 @@ import { type NextFetchEvent, NextRequest, NextResponse } from 'next/server';
 
 // eslint-disable-next-line
 export default async function (req: NextRequest, ev: NextFetchEvent) {
-  console.log(req.nextUrl.locale);
   if (req.nextUrl.locale === 'uk-ua' && req.nextUrl.pathname.startsWith('/opera')) {
     req.nextUrl.locale = 'en';
     req.nextUrl.pathname = '/about';

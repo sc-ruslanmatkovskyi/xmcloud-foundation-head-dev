@@ -20,7 +20,6 @@ export class DictionaryServiceFactory {
       ? new GraphQLDictionaryService({
           siteName,
           clientFactory,
-          rootItemId: '{0653CA99-08AB-44DA-BC98-811C4A6EC666}',
           /*
             GraphQL endpoint may reach its rate limit with the amount of requests it receives and throw a rate limit error.
             GraphQL Dictionary and Layout Services can handle rate limit errors from server and attempt a retry on requests.
