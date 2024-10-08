@@ -16,6 +16,15 @@ import { NextURL } from 'next/dist/server/web/next-url';
 const REGEXP_CONTEXT_SITE_LANG = new RegExp(/\$siteLang/, 'i');
 const REGEXP_ABSOLUTE_URL = new RegExp('^(?:[a-z]+:)?//', 'i');
 
+const getPermutations = (array: [string, string][]): [string, string][][] => {
+  if (array.length <= 1) return [array];
+
+  return array.flatMap((current, i) => {
+    const remaining = array.filter((_, idx) => idx !== i);
+    return getPermutations(remaining).map((permutation) => [current, ...permutation]);
+  });
+};
+
 /**
  * extended RedirectsMiddlewareConfig config type for RedirectsMiddleware
  */
@@ -111,6 +120,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
           REGEXP_CONTEXT_SITE_LANG,
           site.language
         );
+        req.nextUrl.locale = site.language;
       }
 
       const url = this.normalizeUrl(req.nextUrl.clone());
@@ -141,24 +151,23 @@ export class RedirectsMiddleware extends MiddlewareBase {
         }
 
         const prepareNewURL = new URL(`${target[0]}${url.search}`, url.origin);
+
         url.href = prepareNewURL.href;
         url.pathname = prepareNewURL.pathname;
         url.search = prepareNewURL.search;
         url.locale = req.nextUrl.locale;
       }
 
-      const redirectUrl = decodeURIComponent(url.href);
-
       /** return Response redirect with http code of redirect type **/
       switch (existsRedirect.redirectType) {
         case REDIRECT_TYPE_301: {
-          return this.createRedirectResponse(redirectUrl, res, 301, 'Moved Permanently');
+          return this.createRedirectResponse(url, res, 301, 'Moved Permanently');
         }
         case REDIRECT_TYPE_302: {
-          return this.createRedirectResponse(redirectUrl, res, 302, 'Found');
+          return this.createRedirectResponse(url, res, 302, 'Found');
         }
         case REDIRECT_TYPE_SERVER_TRANSFER: {
-          return this.rewrite(redirectUrl, req, res || NextResponse.next());
+          return this.rewrite(url.href, req, res || NextResponse.next());
         }
         default:
           return res || NextResponse.next();
@@ -189,50 +198,71 @@ export class RedirectsMiddleware extends MiddlewareBase {
     siteName: string
   ): Promise<(RedirectInfo & { matchedQueryString?: string }) | undefined> {
     const redirects = await this.redirectsService.fetchRedirects(siteName);
-    const { pathname: targetURL, search: targetQS = '', locale } = req.nextUrl.clone();
+    const {
+      pathname: targetURL,
+      search: targetQS = '',
+      locale,
+    } = this.normalizeUrl(req.nextUrl.clone());
     const language = this.getLanguage(req);
-    const clonedRedirects = structuredClone(redirects);
+    const modifyRedirects = structuredClone(redirects);
 
-    if (!clonedRedirects.length) return undefined;
+    return modifyRedirects.length
+      ? modifyRedirects.find((redirect: RedirectInfo & { matchedQueryString?: string }) => {
+          // Modify the redirect pattern to ignore the language prefix in the path
+          redirect.pattern = redirect.pattern.replace(RegExp(`^[^]?/${language}/`, 'gi'), '');
 
-    return clonedRedirects.find((redirect: RedirectInfo & { matchedQueryString?: string }) => {
-      // Clean up and transform the redirect pattern
-      redirect.pattern = this.cleanPattern(redirect.pattern, language);
+          // Prepare the redirect pattern as a regular expression, making it more flexible for matching URLs
+          redirect.pattern = `/^\/${redirect.pattern
+            .replace(/^\/|\/$/g, '') // Removes leading and trailing slashes
+            .replace(/^\^\/|\/\$$/g, '') // Removes unnecessary start (^) and end ($) anchors
+            .replace(/^\^|\$$/g, '') // Further cleans up anchors
+            .replace(/(?<!\\)\?/g, '\\?') // Escapes question marks in the pattern
+            .replace(/\$\/gi$/g, '')}[\/]?$/i`; // Ensures the pattern allows an optional trailing slash
 
-      // Check if the query string matches the redirect pattern
-      const matchedQueryString = this.isPermutedQueryMatch({
-        pathname: targetURL,
-        queryString: targetQS,
-        pattern: redirect.pattern,
-        locale,
-      });
-      redirect.matchedQueryString = matchedQueryString || '';
+          /**
+           * This line checks whether the current URL query string (and all its possible permutations)
+           * matches the redirect pattern.
+           *
+           * Query parameters in URLs can come in different orders, but logically they represent the
+           * same information (e.g., "key1=value1&key2=value2" is the same as "key2=value2&key1=value1").
+           * To account for this, the method `isPermutedQueryMatch` generates all possible permutations
+           * of the query parameters and checks if any of those permutations match the regex pattern for the redirect.
+           *
+           * NOTE: This fix is specifically implemented for Netlify, where query parameters are sometimes
+           * automatically sorted, which can cause issues with matching redirects if the order of query
+           * parameters is important. By checking every possible permutation, we ensure that redirects
+           * work correctly on Netlify despite this behavior.
+           *
+           * It passes several pieces of information to the function:
+           * 1. `pathname`: The normalized URL path without query parameters (e.g., '/about').
+           * 2. `queryString`: The current query string from the URL, which will be permuted and matched (e.g., '?key1=value1&key2=value2').
+           * 3. `pattern`: The regex pattern for the redirect that we are trying to match against the URL (e.g., '/about?key1=value1').
+           * 4. `locale`: The locale part of the URL (if any), which helps support multilingual URLs.
+           *
+           * If one of the permutations of the query string matches the redirect pattern, the function
+           * returns the matched query string, which is stored in `matchedQueryString`. If no match is found,
+           * it returns `undefined`. The `matchedQueryString` is later used to indicate whether the query
+           * string contributed to a successful redirect match.
+           */
+          const matchedQueryString = this.isPermutedQueryMatch({
+            pathname: targetURL,
+            queryString: targetQS,
+            pattern: redirect.pattern,
+            locale,
+          });
 
-      // Test the pattern against the target URL and locale
-      const matchesURL = regexParser(redirect.pattern).test(targetURL);
-      const matchesLocaleURL = regexParser(redirect.pattern).test(`/${locale}${targetURL}`);
+          // Save the matched query string (if found) into the redirect object
+          redirect.matchedQueryString = matchedQueryString || '';
 
-      return (
-        (matchesURL || matchesLocaleURL || matchedQueryString) &&
-        (!redirect.locale || redirect.locale.toLowerCase() === locale.toLowerCase())
-      );
-    });
-  }
-
-  /**
-   * Helper function to clean the redirect pattern
-   * @param {string} pattern Pattern to clean
-   * @param {string} language Locale to remove from the pattern
-   * @returns {string} Cleaned pattern
-   */
-  private cleanPattern(pattern: string, language: string): string {
-    return `/^\/${
-      pattern
-        .replace(RegExp(`^[^]?/${language}/`, 'gi'), '') // Remove language prefix
-        .replace(/^\/|\/$/g, '') // Trim leading and trailing slashes
-        .replace(/^\^\/|\/\$$/g, '') // Remove regex anchors from URL
-        .replace(/(?<!\\)\?/g, '\\?') // Escape unescaped question marks
-    }[\/]?$/i`; // Append optional trailing slash
+          // Return the redirect if the URL path or any query string permutation matches the pattern
+          return (
+            (regexParser(redirect.pattern).test(targetURL) ||
+              regexParser(redirect.pattern).test(`/${req.nextUrl.locale}${targetURL}`) ||
+              matchedQueryString) &&
+            (redirect.locale ? redirect.locale.toLowerCase() === locale.toLowerCase() : true)
+          );
+        })
+      : undefined;
   }
 
   /**
@@ -272,7 +302,7 @@ export class RedirectsMiddleware extends MiddlewareBase {
       })
       .join('&');
 
-    const newUrl = newQueryString ? new URL(`${url.pathname}?${newQueryString}`, url.origin) : url;
+    const newUrl = new URL(`${url.pathname}?${newQueryString}`, url.origin);
 
     url.search = newUrl.search;
     url.pathname = newUrl.pathname;
@@ -283,14 +313,14 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
   /**
    * Helper function to create a redirect response and remove the x-middleware-next header.
-   * @param {string} url The URL to redirect to.
+   * @param {NextURL} url The URL to redirect to.
    * @param {Response} res The response object.
    * @param {number} status The HTTP status code of the redirect.
    * @param {string} statusText The status text of the redirect.
    * @returns {NextResponse<unknown>} The redirect response.
    */
   private createRedirectResponse(
-    url: string,
+    url: NextURL,
     res: Response | undefined,
     status: number,
     statusText: string
@@ -305,21 +335,6 @@ export class RedirectsMiddleware extends MiddlewareBase {
       redirect.headers.delete('x-middleware-rewrite');
     }
     return redirect;
-  }
-
-  /**
-   * Generates all possible permutations of an array of key-value pairs.
-   * This is used to create every possible combination of URL query parameters.
-   * @param {Array<[string, string]>} array - The array of key-value pairs to permute.
-   * @returns {Array<Array<[string, string]>>} - A 2D array where each inner array is a unique permutation of the input.
-   */
-  private getPermutations(array: [string, string][]): [string, string][][] {
-    if (array.length <= 1) return [array];
-
-    return array.flatMap((current, i) => {
-      const remaining = array.filter((_, idx) => idx !== i);
-      return this.getPermutations(remaining).map((permutation) => [current, ...permutation]);
-    });
   }
 
   /**
@@ -344,12 +359,13 @@ export class RedirectsMiddleware extends MiddlewareBase {
     locale?: string;
   }): string | undefined {
     const paramsArray = Array.from(new URLSearchParams(queryString).entries());
-    const listOfPermuted = this.getPermutations(paramsArray).map(
-      (permutation) => '?' + permutation.map(([key, value]) => `${key}=${value}`).join('&')
+    const listOfPermuted = getPermutations(paramsArray).map(
+      (permutation: [string, string][]) =>
+        '?' + permutation.map(([key, value]) => `${key}=${value}`).join('&')
     );
 
     const normalizedPath = pathname.replace(/\/*$/gi, '');
-    return listOfPermuted.find((query) =>
+    return listOfPermuted.find((query: string) =>
       [
         regexParser(pattern).test(`${normalizedPath}${query}`),
         regexParser(pattern).test(`/${locale}${normalizedPath}${query}`),
