@@ -99,6 +99,8 @@ export class RedirectsMiddleware extends MiddlewareBase {
 
       site = this.getSite(req, res);
 
+      console.log('GET URL OF SITE', req.nextUrl.clone().search, req.nextUrl.clone().searchParams);
+
       // Find the redirect from result of RedirectService
       const existsRedirect = await this.getExistsRedirect(req, site.name);
 
