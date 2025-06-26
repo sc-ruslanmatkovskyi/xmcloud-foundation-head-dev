@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+    <location path="sitecore">
+        <system.webServer>
+            <httpProtocol>
+                <customHeaders>
+                    <add xdt:Transform="SetAttributes" xdt:Locator="Match(name)" name="Content-Security-Policy" value="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; img-src * data:; style-src * 'unsafe-inline'; frame-src *"/>
+                </customHeaders>
+            </httpProtocol>
+        </system.webServer>
+    </location>
+</configuration>
