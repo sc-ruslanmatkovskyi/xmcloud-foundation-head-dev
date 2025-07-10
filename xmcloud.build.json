@@ -20,7 +20,7 @@
       }
     },
     "postActions": {
-        "actions": {
+        "actions":{
           "warmUpCm": {
             "urls": [
               "/sitecore/shell",
@@ -36,11 +36,5 @@
           }
         }
     },
-    "authoringPath": "./authoring",
-	"transforms": [
-		{
-			"xdtPath": "/App_Data/Xdts/Web.config.xdt",
-			"targetPath": "/web.config"
-		}
-	]
+    "authoringPath": "./authoring"
 }
